@@ -1,19 +1,38 @@
-const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const path = require('path'); // Ajoute cette ligne tout en haut
 
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        // On pointe vers le dossier local qu'on vient de créer
-        executablePath: path.join(__dirname, '.puppeteer', 'chrome', 'linux-127.0.6533.88', 'chrome-linux64', 'chrome'),
+        executablePath: "/opt/render/project/src/.puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome",
         args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu'
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--disable-software-rasterizer"
         ]
     }
 });
-// ... reste du code identique ...
+
+// Empêche le crash à cause du QR code
+client.on('qr', () => {
+    console.log("QR reçu (Render ne peut pas l'afficher). Utilise une session déjà générée.");
+});
+
+// Log quand la session est prête
+client.on('ready', () => {
+    console.log("Bot WhatsApp prêt et connecté !");
+});
+
+// Exemple de réponse automatique
+client.on('message', async msg => {
+    console.log(`Message reçu : ${msg.body}`);
+
+    if (msg.body.toLowerCase() === "ping") {
+        await msg.reply("pong");
+    }
+});
+
+// Démarrage du bot
+client.initialize();
